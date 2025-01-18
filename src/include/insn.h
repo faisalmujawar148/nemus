@@ -37,8 +37,15 @@ static inline bool and_insn(Opcode opcode, cpu::NESCpu &cpu) {
   switch (opcode) {
   case 0x29: // bitwise AND 
     uint16_t opr = cpu.read(regblck.m_pc + 1, 1);
-    uint8_t accm = regblock.m_accm;
-    return accm&opr;
-  }
+    uint8_t accm = regblck.m_accm;
+    regblck.m_accm = accm & static_cast<uint8_t>(opr);
+  };
+  if(!(regblck.m_accm)){
+  	regblck.m_status = m_status_z;
+  };
+  if(regblck.m_accm & 1000000){
+	regblck.m_status = m_status_n;
+  };
+
 };
 } // namespace nemus::insn
