@@ -10,5 +10,3 @@ add_subdirectory(test)
 
 target_include_directories(nemus PUBLIC ${PROJECT_INC_DIR})
 target_link_libraries(nemus PUBLIC nemuseng)
-
-

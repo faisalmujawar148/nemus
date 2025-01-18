@@ -1,6 +1,8 @@
+#include "util.h"
 #include <iostream>
 
 int main(void) {
-  std::cout << "Hello World!" << std::endl;
+  nemus::range<int> a(0, 10);
+  std::cout << a.contains(5) << std::endl;
   return 0;
 }
