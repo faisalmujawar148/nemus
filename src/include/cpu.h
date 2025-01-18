@@ -18,3 +18,22 @@ enum AddressingModesKind : uint8_t {
   IndirectIndexed  // [opcode 1B] [operand 2B] -> 16-bit address =  (memory[operand+1] (msb) | memory[operand] (lsb)) + Y
 };
 // clang-format on
+
+/**
+ * The Register block for the NES CPU. The NES only has 6 registers
+ * in the CPU.
+ */
+struct RegiserBlock {
+  /** The Program Counter Register. */
+  uint16_t m_pc;
+  /** The Stack Pointer Register. */
+  uint8_t m_stack_ptr;
+  /** The Accumulator Register. */
+  uint8_t m_accm;
+  /** The Index Register X. */
+  uint8_t m_index_x;
+  /** The Index Register Y. */
+  uint8_t m_index_y;
+  /** The Status Register. */
+  uint8_t m_status;
+};
