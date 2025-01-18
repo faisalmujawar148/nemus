@@ -41,10 +41,10 @@ static inline bool and_insn(Opcode opcode, cpu::NESCpu &cpu) {
     regblck.m_accm = accm & static_cast<uint8_t>(opr);
   };
   if(!(regblck.m_accm)){
-  	regblck.m_status = m_status_z;
+  	regblck.m_status = 00000010;
   };
   if(regblck.m_accm & 1000000){
-	regblck.m_status = m_status_n;
+	regblck.m_status = regblck.m_status & 10000000;
   };
 
 };
