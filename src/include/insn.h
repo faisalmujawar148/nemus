@@ -31,15 +31,14 @@ static inline void invalid_instruction(Opcode opcode, cpu::NESCpu &cpu) {
   std::exit(-1);
 };
 
-/**
-static inline bool dummy_insn(Opcode opcode, cpu::NESCpu &cpu) {
+/** Bitwise AND. */
+static inline bool and_insn(Opcode opcode, cpu::NESCpu &cpu) {
   auto &regblck = cpu.get_reg_block();
   switch (opcode) {
-  case 0x67: // Immediate
-    uint16_t opr = cpu.read(regblck.m_pc + 1, 2);
-    // msg.data -- value
+  case 0x29: // bitwise AND 
+    uint16_t opr = cpu.read(regblck.m_pc + 1, 1);
+    uint8_t accm = regblock.m_accm;
+    return accm&opr;
   }
 };
-*/
-
 } // namespace nemus::insn
