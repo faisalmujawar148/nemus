@@ -15,13 +15,13 @@ constexpr range<Addr16> ram_range = range<Addr16>(0x0200, 0x0600, "RAM Address R
 constexpr range<Addr16> lower_mirror_range = range<Addr16>(0x0800, 0x1800, "Lower Mirror Address Range in the System Memory Map");
 
 /** Lower I/O Registers. */
-constexpr range<Addr16> lower_io_reg_range = range<Addr16>(0x2000, 0x0008, "Lower I/O Register Address Range in the System Memory Map");
+constexpr range<Addr16> lower_io_reg_range = range<Addr16>(0x2000, 0x0008, "Lower I/O Registers Address Range in the System Memory Map");
 
 /** Upper Mirror range. */
 constexpr range<Addr16> upper_mirror_range = range<Addr16>(0x2008, 0x1FF8, "Upper Mirror Address Range in the System Memory Map");
 
 /** Upper I/O Registers. */
-constexpr range<Addr16> upper_io_reg_range = range<Addr16>(0x4000, 0x0020, "Upper I/O Register Address Range in the System Memory Map");
+constexpr range<Addr16> upper_io_reg_range = range<Addr16>(0x4000, 0x0020, "Upper I/O Registers Address Range in the System Memory Map");
 
 /** Expansion ROM. */
 constexpr range<Addr16> expansion_rom_range = range<Addr16>(0x4020, 0x1FE0, "Expansion ROM Address Range in the System Memory Map");
