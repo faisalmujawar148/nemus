@@ -56,6 +56,64 @@ static inline void invalid_instruction(Opcode opcode) {
   std::exit(-1);
 };
 
-NES_INSN_DEFN(and) { return false; }
+NES_INSN_DEFN(asl) {
+  Reg8 old_value;
+  Reg8 new_value;
+  switch (opcode) {
+  case 0x0A: {
+    old_value = reg_block.m_accm;
+    new_value = old_value << 1;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x06: {
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
+    old_value = mem.read(addr, 1);
+    new_value = old_value << 1;
+    mem.write(addr, 1, new_value);
+    break;
+  }
+  case 0x16: {
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
+    Reg8 xreg = reg_block.m_index_x;
+    old_value = mem.read(addr + xreg, 1);
+    new_value = old_value << 1;
+    mem.write(addr + xreg, 1, new_value);
+    break;
+  }
+  case 0x0E: {
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    old_value = mem.read(addr, 1);
+    new_value = old_value << 1;
+    mem.write(addr, 1, new_value);
+    break;
+  }
+  case 0x1E: {
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    Reg8 xreg = reg_block.m_index_x;
+    old_value = mem.read(addr + xreg, 1);
+    new_value = old_value << 1;
+    mem.write(addr + xreg, 1, new_value);
+    break;
+  }
+  default:
+    return false;
+  }
+
+  if (new_value == 0) {
+    reg_block.set_z_flag();
+  } else {
+    reg_block.clear_z_flag();
+  }
+  if (new_value & 0b10000000) {
+    reg_block.set_n_flag();
+  }
+  if (old_value & 0b10000000) {
+    reg_block.set_c_flag();
+  } else {
+    reg_block.clear_c_flag();
+  }
+  return true;
+}
 
 } // namespace nemus::insn

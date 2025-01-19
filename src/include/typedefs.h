@@ -6,6 +6,7 @@ typedef uint16_t Addr16;
 typedef uint8_t Size8;
 
 typedef uint16_t Data16;
+typedef uint8_t Data8;
 
 typedef uint16_t Reg16;
 typedef uint8_t Reg8;
