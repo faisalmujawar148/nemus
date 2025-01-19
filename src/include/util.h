@@ -1,4 +1,5 @@
 #pragma once
+
 #include "typedefs.h"
 #include <string_view>
 #include <type_traits>
