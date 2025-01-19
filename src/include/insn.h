@@ -1,11 +1,32 @@
+#pragma once
+
 #include "typedefs.h"
+#include <concepts>
 #include <cstdint>
 #include <fmt/core.h>
 #include <string>
 
 #include "cpu.h"
 
+#define NES_INSN_DEFN(mnemonic)                                                \
+  template <typename ObjType>                                                  \
+    requires InsnMemIF<ObjType>                                                \
+  static inline bool nes##_##mnemonic##_##insn(                                \
+      Opcode opcode, cpu::RegisterBlock &reg_block, ObjType &mem)
+
+#define NES_INSN(mnemonic) nemus::insn::nes##_##mnemonic##_##insn
+
 namespace nemus::insn {
+
+/** Concept which provides a memory interface to NES instructions. */
+template <typename ObjType>
+concept InsnMemIF =
+    requires(ObjType obj, Addr16 addr, Size8 size, Data16 data) {
+      { obj.read(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
+      { obj.write(addr, size, data) } -> std::same_as<bool>;
+      { obj.read_rom(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
+      { obj.write_rom(addr, size, data) } -> std::same_as<bool>;
+    };
 
 // clang-format off
 /** All addressing modes supported by the ISA*/
@@ -26,20 +47,15 @@ enum AddressingModesKind : uint8_t {
 };
 // clang-format on
 
-static inline void invalid_instruction(Opcode opcode, cpu::NESCpu &cpu) {
+// -----------------------------------------------------------------------------
+// ------------- Only instruction definitions from point onwards ---------------
+// -----------------------------------------------------------------------------
+
+static inline void invalid_instruction(Opcode opcode) {
   fmt::println("Invalid opcode supplied: {:#02x}", opcode);
   std::exit(-1);
 };
 
-/**
-static inline bool dummy_insn(Opcode opcode, cpu::NESCpu &cpu) {
-  auto &regblck = cpu.get_reg_block();
-  switch (opcode) {
-  case 0x67: // Immediate
-    uint16_t opr = cpu.read(regblck.m_pc + 1, 2);
-    // msg.data -- value
-  }
-};
-*/
+NES_INSN_DEFN(and) { return false; }
 
 } // namespace nemus::insn
