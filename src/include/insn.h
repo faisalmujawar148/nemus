@@ -115,9 +115,9 @@ NES_INSN_DEFN(and) {
   Reg8 new_value;
   switch (opcode) {
   case 0x29: { // Immediate
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
+    Data16 opr = mem.read_rom(reg_block.m_pc + 1, 1);
     old_value = reg_block.m_accm;
-    new_value = old_value & addr;
+    new_value = old_value & opr;
     reg_block.m_accm = new_value;
     break;
   }
@@ -137,6 +137,7 @@ NES_INSN_DEFN(and) {
     break;
   }
   case 0x2D: { // Absolute
+    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
     old_value = mem.read(addr, 1);
     new_value = old_value & reg_block.m_accm;
     reg_block.m_accm = new_value; 
