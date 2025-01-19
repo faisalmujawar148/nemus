@@ -101,19 +101,11 @@ NES_INSN_DEFN(asl) {
     return false;
   }
 
-  if (new_value == 0) {
-    reg_block.set_z_flag();
-  } else {
-    reg_block.clear_z_flag();
-  }
+  reg_block.update_z_flag(new_value);
   if (new_value & 0b10000000) {
-    reg_block.set_n_flag();
+    reg_block.update_n_flag(new_value);
   }
-  if (old_value & 0b10000000) {
-    reg_block.set_c_flag();
-  } else {
-    reg_block.clear_c_flag();
-  }
+  reg_block.update_c_flag(old_value & 0x80);
   return true;
 }
 
