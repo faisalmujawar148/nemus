@@ -109,4 +109,83 @@ NES_INSN_DEFN(asl) {
   return true;
 }
 
+NES_INSN_DEFN(and) {
+  Reg8 old_value;
+  Reg8 new_value;
+  switch (opcode) {
+  case 0x29: { // Immediate
+    Data16 opr = mem.read_rom(reg_block.m_pc + 1, 1);
+    old_value = reg_block.m_accm;
+    new_value = old_value & opr;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x25: { // Zero Page
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
+    old_value = mem.read(addr, 1);
+    new_value = reg_block.m_accm & old_value;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x35: { // Zero Page, X
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
+    Reg8 xreg = reg_block.m_index_x;
+    old_value = mem.read(addr + xreg, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x2D: { // Absolute
+    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
+    old_value = mem.read(addr, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x3D: { // Absolute, X
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    Reg8 xreg = reg_block.m_index_x;
+    old_value = mem.read(addr + xreg, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x39: { // Absolute, Y
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    Reg8 yreg = reg_block.m_index_y;
+    old_value = mem.read(addr + yreg, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x21: { // Indirect, X
+    Reg8 xreg = reg_block.m_index_x;
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    addr = addr + xreg;
+    Data16 taddr = mem.read(addr, 2);
+    old_value = mem.read(taddr, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  case 0x31: { // Indirect, Y
+    Reg8 yreg = reg_block.m_index_y;
+    Data16 opr = mem.read_rom(reg_block.m_pc + 1, 2);
+    Data16 addr = mem.read_rom(opr + yreg);
+    Data16 taddr = addr + yreg;
+    old_value = mem.read(taddr, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
+    break;
+  }
+  default:
+    return false;
+  }
+  reg_block.update_z_flag(new_value);
+  if (new_value & 0x80) {
+    reg_block.update_n_flag(new_value);
+  }
+  reg_block.update_c_flag(old_value & 0x80);
+  return true;
+};
 } // namespace nemus::insn
