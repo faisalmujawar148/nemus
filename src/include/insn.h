@@ -3,7 +3,7 @@
 #include "typedefs.h"
 #include <concepts>
 #include <cstdint>
-// #include <fmt/core.h>
+#include <fmt/core.h>
 #include <string>
 
 #include "cpu.h"
@@ -52,7 +52,7 @@ enum AddressingModesKind : uint8_t {
 // -----------------------------------------------------------------------------
 
 static inline void invalid_instruction(Opcode opcode) {
-  // fmt::println("Invalid opcode supplied: {:#02x}", opcode);
+  fmt::println("Invalid opcode supplied: {:#02x}", opcode);
   std::exit(-1);
 };
 
