@@ -3,7 +3,6 @@
 #include <iostream>
 
 int main(void) {
-  nemus::range<int> a(0, 10);
-  std::cout << a.contains(5) << std::endl;
+  std::cout << "Welcome to Nemus" << std::endl;
   return 0;
 }
