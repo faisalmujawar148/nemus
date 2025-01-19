@@ -160,7 +160,7 @@ NES_INSN_DEFN(and) {
   }
   case 0x21: { // Indirect, X
     Reg8 xreg = reg_block.m_index_x;
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
     addr = addr + xreg;
     Data16 taddr = mem.read(addr, 2);
     old_value = mem.read(taddr, 1);
@@ -170,8 +170,8 @@ NES_INSN_DEFN(and) {
   }
   case 0x31: { // Indirect, Y
     Reg8 yreg = reg_block.m_index_y;
-    Data16 opr = mem.read_rom(reg_block.m_pc + 1, 2);
-    Data16 addr = mem.read_rom(opr + yreg);
+    Data16 opr = mem.read_rom(reg_block.m_pc + 1, 1);
+    Data16 addr = mem.read_rom(opr);
     Data16 taddr = addr + yreg;
     old_value = mem.read(taddr, 1);
     new_value = old_value & reg_block.m_accm;
