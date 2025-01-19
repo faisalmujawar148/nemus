@@ -102,7 +102,7 @@ NES_INSN_DEFN(asl) {
   }
 
   reg_block.update_z_flag(new_value);
-  if (new_value & 0b10000000) {
+  if (new_value & 0x80) {
     reg_block.update_n_flag(new_value);
   }
   reg_block.update_c_flag(old_value & 0x80);
@@ -114,82 +114,77 @@ NES_INSN_DEFN(and) {
   Reg8 old_value;
   Reg8 new_value;
   switch (opcode) {
-  case 0x29: {
+  case 0x29: { // Immediate
     Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
     old_value = reg_block.m_accm;
     new_value = old_value & addr;
     reg_block.m_accm = new_value;
     break;
   }
-  case 0x25: {
+  case 0x25: { // Zero Page
     Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
     old_value = mem.read(addr, 1);
     new_value = reg_block.m_accm & old_value;
-    mem.write(addr, 1, new_value);
+    reg_block.m_accm = new_value;
     break;
   }
-  case 0x35: {
+  case 0x35: { // Zero Page, X
     Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
     Reg8 xreg = reg_block.m_index_x;
     old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
     break;
   }
-  case 0x2D: {
+  case 0x2D: { // Absolute
     old_value = mem.read(addr, 1);
-    new_value = old_value << 1; mem.write(addr, 1, new_value);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value; 
     break;
   }
-  case 0x3D: {
+  case 0x3D: { // Absolute, X
     Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
     Reg8 xreg = reg_block.m_index_x;
     old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
     break;
   }
-  case 0x39: {
+  case 0x39: { // Absolute, Y
     Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
-    Reg8 xreg = reg_block.m_index_x;
-    old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    Reg8 yreg = reg_block.m_index_y;
+    old_value = mem.read(addr + yreg, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value;
     break;
   }
-  case 0x21: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+  case 0x21: { // Indirect, X
     Reg8 xreg = reg_block.m_index_x;
-    old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    Data16 addr1 = mem.read_rom(reg_block.m_pc + xreg, 1);
+    Data16 addr2 = mem.read_rom(reg_block.m_pc + xreg + 1, 1);
+    Data16 addr = mem.read_rom(addr1<<7 | addr2);
+    old_value = mem.read(addr, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value
     break;
   }
-  case 0x31: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
-    Reg8 xreg = reg_block.m_index_x;
-    old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+  case 0x31:  { // Indirect, X
+    Reg8 yreg = reg_block.m_index_y;
+    Data16 addr1 = mem.read_rom(reg_block.m_pc + yreg, 1);
+    Data16 addr2 = mem.read_rom(reg_block.m_pc + yreg + 1, 1);
+    Data16 addr = mem.read_rom(addr1<<7 | addr2);
+    old_value = mem.read(addr, 1);
+    new_value = old_value & reg_block.m_accm;
+    reg_block.m_accm = new_value
     break;
   }
   default:
     return false;
   }
-
-  if (new_value == 0) {
-    reg_block.set_z_flag();
-  } else {
-    reg_block.clear_z_flag();
+  reg_block.update_z_flag(new_value);
+  if (new_value & 0x80) {
+    reg_block.update_n_flag(new_value);
   }
-  if (new_value & 0b10000000) {
-    reg_block.set_n_flag();
-  }
-  if (old_value & 0b10000000) {
-    reg_block.set_c_flag();
-  } else {
-    reg_block.clear_c_flag();
-  }
+  reg_block.update_c_flag(old_value & 0x80);
   return true;
-}
 } // namespace nemus::insn

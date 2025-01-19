@@ -2,6 +2,7 @@
 #include "util.h"
 
 namespace nemus::cpummap {
+	using namespace util;
 /** Zero Page Range. */
 constexpr range<Addr16> zero_page_range =
     range<Addr16>(0x0, 0x100, "Zero Page Address Range in the CPU Memory Map");
