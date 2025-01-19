@@ -1,6 +1,7 @@
 #pragma once
 
 #include "typedefs.h"
+#include "util.h"
 #include <concepts>
 #include <cstdint>
 #include <fmt/core.h>
@@ -33,7 +34,7 @@ concept InsnMemIF =
 enum AddressingModesKind : uint8_t {
   Implicit,        // [opcode 1B]
   Accumulator,     // [opcode 1B]              -> accumulator source and destination
-  Immediate,       // [opcode 1B] [operand 2B] -> 16-bit address = operand
+  Immediate,       // [opcode 1B] [operand 1B] -> 16-bit address = operand
   ZeroPage,        // [opcode 1B] [operand 1B] -> operand is an 8-bit address in the ZeroPage Range
   ZeroPageX,       // [opcode 1B] [operand 1B] -> 8-bit address = operand + X
   ZeroPageY,       // [opcode 1B] [operand 1B] -> 8-bit address = operand + Y
@@ -42,8 +43,8 @@ enum AddressingModesKind : uint8_t {
   AbsoluteX,       // [opcode 1B] [operand 2B] -> 16-bit operand (LSB first) + X
   AbsoluteY,       // [opcode 1B] [operand 2B] -> 16-bit operand (LSB first) + Y
   Indirect,        // [opcode 1B] [operand 2B] -> 16-bit address = memory[operand+1] (msb) | memory[operand] (lsb) 
-  IndexedIndirect, // [opcode 1B] [operand 2B] -> 16-bit address = memory[operand+X+1] (msb) | memory[operand+X] (lsb)  
-  IndirectIndexed  // [opcode 1B] [operand 2B] -> 16-bit address =  (memory[operand+1] (msb) | memory[operand] (lsb)) + Y
+  IndexedIndirect, // [opcode 1B] [operand 1B] -> 16-bit address = memory[operand+X+1] (msb) | memory[operand+X] (lsb)  
+  IndirectIndexed  // [opcode 1B] [operand 1B] -> 16-bit address =  (memory[operand+1] (msb) | memory[operand] (lsb)) + Y
 };
 // clang-format on
 
@@ -81,15 +82,15 @@ NES_INSN_DEFN(asl) {
     mem.write(addr + xreg, 1, new_value);
     break;
   }
-  case 0x0E: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+  case 0x0E: { // Absolute
+    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
     old_value = mem.read(addr, 1);
     new_value = old_value << 1;
     mem.write(addr, 1, new_value);
     break;
   }
-  case 0x1E: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
+  case 0x1E: { // AbsoluteX
+    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
     Reg8 xreg = reg_block.m_index_x;
     old_value = mem.read(addr + xreg, 1);
     new_value = old_value << 1;

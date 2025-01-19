@@ -1,7 +1,8 @@
-
+#pragma once
+#include "typedefs.h"
 #include <string_view>
 #include <type_traits>
-namespace nemus {
+namespace nemus::utils {
 
 constexpr unsigned long long operator"" _kb(unsigned long long kb) {
   return kb * 1024;
@@ -34,4 +35,8 @@ struct range {
   bool contains(Type arg) { return arg >= m_start && arg < m_end; }
 };
 
-}; // namespace nemus
+Data16 static inline swap_msb_lsb(Data16 data) {
+  return (data & 0x0F) << 8 | (data & 0xF0) >> 8;
+};
+
+}; // namespace nemus::utils
