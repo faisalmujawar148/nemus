@@ -3,7 +3,11 @@
 #include "interconnect.h"
 #include "typedefs.h"
 #include <cstdint>
+#include <iostream>
 #include <utility>
+namespace nemus::insn {
+enum AddressingModesKind : uint8_t;
+};
 
 namespace nemus::cpu {
 
@@ -13,17 +17,17 @@ namespace nemus::cpu {
  */
 struct RegisterBlock {
   /** The Program Counter Register. */
-  Reg16 m_pc;
+  Reg16 m_pc = 0;
   /** The Stack Pointer Register. */
-  Reg8 m_stack_ptr;
+  Reg8 m_stack_ptr = 0;
   /** The Accumulator Register. */
-  Reg8 m_accm;
+  Reg8 m_accm = 0;
   /** The Index Register X. */
-  Reg8 m_index_x;
+  Reg8 m_index_x = 0;
   /** The Index Register Y. */
-  Reg8 m_index_y;
+  Reg8 m_index_y = 0;
   /** The Status Register. */
-  Reg8 m_status;
+  Reg8 m_status = 0;
 
   /** various getters and setters for Status Register flags. */
   inline Reg8 update_n_flag(bool value) {
@@ -47,7 +51,8 @@ struct RegisterBlock {
     return m_status;
   };
   inline Reg8 update_z_flag(bool value) {
-    m_status = (m_status & ~0b00000010) | (static_cast<Reg8>(value) << 1);
+    m_status = (m_status & 0b11111101) | (static_cast<Reg8>(value == 0) << 1);
+
     return m_status;
   };
   inline Reg8 update_c_flag(bool value) {
@@ -55,13 +60,15 @@ struct RegisterBlock {
     return m_status;
   };
 
-  Reg8 get_n_flag() { return (m_status & 0b10000000 >> 7); };
-  Reg8 get_v_flag() { return (m_status & 0b01000000 >> 6); };
-  Reg8 get_b_flag() { return (m_status & 0b00010000 >> 4); };
-  Reg8 get_i_flag() { return (m_status & 0b00001000 >> 3); };
-  Reg8 get_d_flag() { return (m_status & 0b00000100 >> 2); };
-  Reg8 get_z_flag() { return (m_status & 0b00000010 >> 1); };
-  Reg8 get_c_flag() { return (m_status & 0b00000001 >> 0); };
+  Reg8 get_n_flag() { return ((m_status & 0b10000000) >> 7); };
+  Reg8 get_v_flag() { return ((m_status & 0b01000000) >> 6); };
+  Reg8 get_b_flag() { return ((m_status & 0b00010000) >> 4); };
+  Reg8 get_i_flag() { return ((m_status & 0b00001000) >> 3); };
+  Reg8 get_d_flag() { return ((m_status & 0b00000100) >> 2); };
+  Reg8 get_z_flag() { return ((m_status & 0b00000010) >> 1); };
+  Reg8 get_c_flag() { return ((m_status & 0b00000001) >> 0); };
+
+  void increment_pc(insn::AddressingModesKind addr_mode);
 };
 
 /**
@@ -82,6 +89,8 @@ public:
   bool write(Addr16 addr, Size8 size, Data16 data);
   std::pair<bool, Data16> read_rom(Addr16 addr, Size8 size);
   bool write_rom(Addr16 addr, Size8 size, Data16 data);
+  std::pair<bool, Data16>
+  read_insn_operands(insn::AddressingModesKind addr_mode, Addr16 pc = 0);
 
 private:
   RegisterBlock m_regblock;
