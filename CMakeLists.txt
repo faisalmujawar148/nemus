@@ -1,12 +1,14 @@
 project(nemus)
-set(TARGET nemus PROPERTY CXX_STANDARD 23)
+cmake_minimum_required(VERSION 3.22)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(nemus src/main.cc)
 
 set(PROJECT_INC_DIR "${CMAKE_SOURCE_DIR}/src/include")
 
 add_subdirectory(src)
-add_subdirectory(test)
 
 target_include_directories(nemus PUBLIC ${PROJECT_INC_DIR})
 target_link_libraries(nemus PUBLIC nemuseng fmt::fmt)
