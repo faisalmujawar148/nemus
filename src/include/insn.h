@@ -136,7 +136,7 @@ NES_INSN_DEFN(and) {
     break;
   }
   case 0x2D: { // Absolute
-    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
+    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 2);
     old_value = mem.read(addr, 1);
     new_value = old_value & reg_block.m_accm;
     reg_block.m_accm = new_value;
