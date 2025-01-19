@@ -161,19 +161,16 @@ NES_INSN_DEFN(and) {
   }
   case 0x21: { // Indirect, X
     Reg8 xreg = reg_block.m_index_x;
-    Data16 addr1 = mem.read_rom(reg_block.m_pc + xreg, 1);
-    Data16 addr2 = mem.read_rom(reg_block.m_pc + xreg + 1, 1);
-    Data16 addr = mem.read_rom(addr1<<7 | addr2);
+    Data16 addr = mutils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + xreg, 2));
     old_value = mem.read(addr, 1);
     new_value = old_value & reg_block.m_accm;
     reg_block.m_accm = new_value
     break;
   }
-  case 0x31:  { // Indirect, X
+  case 0x31:  { // Indirect, Y
     Reg8 yreg = reg_block.m_index_y;
-    Data16 addr1 = mem.read_rom(reg_block.m_pc + yreg, 1);
-    Data16 addr2 = mem.read_rom(reg_block.m_pc + yreg + 1, 1);
-    Data16 addr = mem.read_rom(addr1<<7 | addr2);
+    Data16 addr1 = mutils::swap_msb_lsb(mem.read_rom(reg_block.m_pc, 2));
+    Data16 addr = mem.read_rom(addr1 + yreg);
     old_value = mem.read(addr, 1);
     new_value = old_value & reg_block.m_accm;
     reg_block.m_accm = new_value
