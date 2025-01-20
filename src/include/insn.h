@@ -1,13 +1,13 @@
 #pragma once
 
+#include "cpu.h"
 #include "typedefs.h"
 #include "util.h"
 #include <concepts>
 #include <cstdint>
 #include <fmt/core.h>
+#include <iostream>
 #include <string>
-
-#include "cpu.h"
 
 #define NES_INSN_DEFN(mnemonic)                                                \
   template <typename ObjType>                                                  \
@@ -19,18 +19,23 @@
 
 namespace nemus::insn {
 
+enum AddressingModesKind : uint8_t;
+
 /** Concept which provides a memory interface to NES instructions. */
 template <typename ObjType>
-concept InsnMemIF =
-    requires(ObjType obj, Addr16 addr, Size8 size, Data16 data) {
-      { obj.read(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
-      { obj.write(addr, size, data) } -> std::same_as<bool>;
-      { obj.read_rom(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
-      { obj.write_rom(addr, size, data) } -> std::same_as<bool>;
-    };
+concept InsnMemIF = requires(ObjType obj, Addr16 addr, Size8 size, Data16 data,
+                             AddressingModesKind addr_mode, Addr16 pc) {
+  { obj.read(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
+  { obj.write(addr, size, data) } -> std::same_as<bool>;
+  { obj.read_rom(addr, size) } -> std::same_as<std::pair<bool, Data16>>;
+  { obj.write_rom(addr, size, data) } -> std::same_as<bool>;
+  {
+    obj.read_insn_operands(addr_mode, pc = 0)
+  } -> std::same_as<std::pair<bool, Data16>>;
+};
 
 // clang-format off
-/** All addressing modes supported by the ISA*/
+/** All addressing modes supported by the ISA. */
 enum AddressingModesKind : uint8_t {
   Implicit,        // [opcode 1B]
   Accumulator,     // [opcode 1B]              -> accumulator source and destination
@@ -58,49 +63,46 @@ static inline void invalid_instruction(Opcode opcode) {
 };
 
 NES_INSN_DEFN(asl) {
-  Reg8 old_value;
-  Reg8 new_value;
+#define ASL_HELPER(addr_mode, incr)                                            \
+  auto [ok1, operand] = mem.read_insn_operands(addr_mode);                     \
+  auto [ok2, curr_val] = mem.read(operand + incr, 1);                          \
+  old_value = curr_val;                                                        \
+  new_value = old_value << 1;                                                  \
+  mem.write(operand + incr, 1, new_value);                                     \
+  reg_block.increment_pc(addr_mode);
+
+  Reg8 old_value = 0;
+  Reg8 new_value = 0;
   switch (opcode) {
   case 0x0A: {
     old_value = reg_block.m_accm;
     new_value = old_value << 1;
     reg_block.m_accm = new_value;
+    reg_block.increment_pc(AddressingModesKind::Accumulator);
     break;
   }
   case 0x06: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
-    old_value = mem.read(addr, 1);
-    new_value = old_value << 1;
-    mem.write(addr, 1, new_value);
+    ASL_HELPER(AddressingModesKind::ZeroPage, 0)
     break;
   }
   case 0x16: {
-    Data16 addr = mem.read_rom(reg_block.m_pc + 1, 1);
     Reg8 xreg = reg_block.m_index_x;
-    old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    ASL_HELPER(AddressingModesKind::ZeroPageX, xreg)
     break;
   }
-  case 0x0E: { // Absolute
-    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
-    old_value = mem.read(addr, 1);
-    new_value = old_value << 1;
-    mem.write(addr, 1, new_value);
+  case 0x0E: {
+    ASL_HELPER(AddressingModesKind::Absolute, 0)
     break;
   }
-  case 0x1E: { // AbsoluteX
-    Data16 addr = utils::swap_msb_lsb(mem.read_rom(reg_block.m_pc + 1, 2));
+  case 0x1E: {
     Reg8 xreg = reg_block.m_index_x;
-    old_value = mem.read(addr + xreg, 1);
-    new_value = old_value << 1;
-    mem.write(addr + xreg, 1, new_value);
+    ASL_HELPER(AddressingModesKind::AbsoluteX, xreg)
     break;
   }
   default:
     return false;
   }
-
+#undef ASL_HELPER
   reg_block.update_z_flag(new_value);
   if (new_value & 0b10000000) {
     reg_block.update_n_flag(new_value);
