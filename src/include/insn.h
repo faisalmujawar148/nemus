@@ -190,4 +190,105 @@ NES_INSN_DEFN(and) {
   reg_block.update_c_flag(old_value & 0x80);
   return true;
 };
+
+NES_INSN_DEFN(clc) {
+  switch (opcode) {
+  case 0x18: { // Implied
+    break;
+  }
+  default:
+    return false;
+  }
+  reg_block.update_c_flag(0);
+  return true;
+};
+
+NES_INSN_DEFN(adc) {
+  Reg8 opr;
+  Reg8 accm = reg_block.m_accm;
+  Reg8 carry = reg_block.get_c_flag();
+  Reg8 result;
+  switch (opcode) {
+  // ? -> clc opcode call implementation?
+  case 0x69: { // Immediate
+    auto [ok, data] = mem.read_insn_operands(AddressingModesKind::Immediate);
+    if (!ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x65: { // Zero Page
+    auto [ok, addr] = mem.read_insn_operands(AddressingModesKind::ZeroPage);
+    if (!ok)
+      return false;
+    auto [read_ok, data] = mem.read(addr, 1);
+    if (!read_ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x75: { // Zero Page, X
+    auto [ok, addr] = mem.read_insn_operands(AddressingModesKind::ZeroPageX);
+    if (!ok)
+      return false;
+    addr = (addr + reg_block.m_index_x) & 0xFF; // Wrap around zero-page
+    auto [read_ok, data] = mem.read(addr, 1);
+    if (!read_ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x6D: { // Absolute
+    auto [ok, addr] = mem.read_insn_operands(AddressingModesKind::Absolute);
+    if (!ok)
+      return false;
+    auto [read_ok, data] = mem.read(addr, 1);
+    if (!read_ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x7D: { // Absolute, X
+    auto [ok, addr] = mem.read_insn_operands(AddressingModesKind::AbsoluteX);
+    if (!ok)
+      return false;
+    addr += reg_block.m_index_x;
+    auto [read_ok, data] = mem.read(addr, 1);
+    if (!read_ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x79: { // Absolute, Y
+    auto [ok, addr] = mem.read_insn_operands(AddressingModesKind::AbsoluteY);
+    if (!ok)
+      return false;
+    addr += reg_block.m_index_y;
+    auto [read_ok, data] = mem.read(addr, 1);
+    if (!read_ok)
+      return false;
+    opr = data & 0xFF;
+    break;
+  }
+  case 0x61: { // Indirect, X
+    // todo
+  }
+  case 0x71: { // Indirect, Y
+    // todo
+  }
+  default:
+    return false;
+  }
+  uint16_t temp_result = accm + opr + carry;
+  result = temp_result & 0xFF;
+  reg_block.m_accm = result;
+
+  // Update flags
+  reg_block.update_c_flag(temp_result > 0xFF);
+  reg_block.update_z_flag(result == 0);
+  reg_block.update_n_flag(result & 0x80);
+  reg_block.update_v_flag(((accm ^ result) & (opr ^ result) & 0x80) != 0);
+  return true;
+};
+
 } // namespace nemus::insn
